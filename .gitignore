@@ -1,0 +1,6 @@
+/.rspec
+/.bundle/
+/vendor/
+/bin/
+/tmp/
+/Gemfile.lock

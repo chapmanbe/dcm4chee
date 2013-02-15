@@ -16,3 +16,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+package "unzip" do
+  action :install
+end
+
+# Download and extract the source archives for DCM4CHEE, JBoss, etc.
+node[:dcm4chee][:source].each do |name, attributes|
+  prefix         = node[:dcm4chee][:prefix] # Here we install everything.
+  source_archive = Source.new(attributes)
+  destination    = File.join(prefix, source_archive.filename)
+  basedir        = File.join(prefix, source_archive.basename)
+
+  remote_file destination do
+    source source_archive.url
+    checksum source_archive.checksum
+  end
+
+  command = source_archive.zip? ? "unzip" : "tar -xzf"
+  execute "#{command} #{destination}" do
+    cwd prefix
+    creates basedir
+  end
+end
