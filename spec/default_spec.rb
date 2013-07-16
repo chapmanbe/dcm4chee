@@ -1,8 +1,8 @@
 require "spec_helper"
 
-describe "chef-dcm4chee::default" do
+describe "dcm4chee::default" do
   let(:prefix) { "/usr/local" }
-  let(:chef_run) { ChefSpec::ChefRunner.new.converge "chef-dcm4chee::default" }
+  let(:chef_run) { ChefSpec::ChefRunner.new.converge "dcm4chee::default" }
 
   it "installs unzip to extract the sources" do
     expect(chef_run).to install_package("unzip")
