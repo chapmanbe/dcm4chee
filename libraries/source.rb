@@ -17,6 +17,7 @@ class Source
   #
   # @returns [String] The source checksum.
   def checksum
+    # TODO: Raise error on missing checksum!
     @opts[:checksum]
   end
 
