@@ -17,29 +17,42 @@
 # limitations under the License.
 #
 
+# Initialize some helpers.
+dcm4chee     = RemotePackage.new :dcm4chee, node
+dcm4chee_arr = RemotePackage.new :dcm4chee_arr, node
+jboss        = RemotePackage.new :jboss, node
+jai_imageio  = RemotePackage.new :jai_imageio, node
 
+# Required to unpack the remote packages.
 package 'unzip' do
   action :install
 end
 
-# Download and unpack all archives.
-%w[dcm4chee jboss dcm4chee_arr jai_imageio].each do |name|
-  archive     = node[:dcm4chee][:source][name]
-  url         = archive[:source]
-  destination = File.join Chef::Config[:file_cache_path], filename(url)
-  basedir     = File.join node[:dcm4chee][:prefix],
-    (archive[:basename] || basename(url))
-
-  remote_file destination do
-    source url
-    checksum archive[:checksum]
-    not_if { ::File.exists? basedir }
+# Download and unpack all packages.
+[dcm4chee, jboss, dcm4chee_arr, jai_imageio].each do |pkg|
+  remote_file pkg.destination do
+    source pkg.source
+    checksum pkg.checksum
+    not_if { ::File.exists? pkg.basedir }
   end
 
-  command = filename(url) =~ /\.zip$/ ? 'unzip' : 'tar -xzf'
-  execute "#{command} #{destination}" do
-    cwd node[:dcm4chee][:prefix]
-    creates basedir
+  command = pkg.source =~ /\.zip$/ ? 'unzip' : 'tar -xzf'
+  execute "#{command} #{pkg.destination}" do
+    cwd pkg.prefix
+    creates pkg.basedir
   end
 end
 
+# Install JBoss.
+#jboss_install_log = File.join(dcm4chee.basedir, 'install_jboss.log')
+# execute "./bin/install_jboss.sh #{jboss.basedir} > #{jboss_install_log}" do
+#   cwd dcm4chee.basedir
+#   creates jboss_install_log
+# end
+#
+# # Install DCM4CHEE-ARR.
+# dcm4chee_arr_install_log = File.join(dcm4chee.basedir, 'install_dcm4chee_arr.log')
+# execute "./bin/install_arr.sh #{dcm4chee_arr.basedir} > #{dcm4chee_arr_install_log}" do
+#   cwd dcm4chee.basedir
+#   creates dcm4chee_arr_install_log
+# end

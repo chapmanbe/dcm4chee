@@ -115,4 +115,11 @@ describe 'dcm4chee::default' do
       :creates => "#{prefix}/jai_imageio-1_1"
     )
   end
+
+#  it 'installs jboss' do
+#    converge!
+#    expect(chef_run).to execute_command("./bin/install_jboss.sh #{prefix}/jboss-4.2.3.GA").with(
+#      :cwd => '/usr/local/dcm4chee-2.17.1-mysql'
+#    )
+#  end
 end
