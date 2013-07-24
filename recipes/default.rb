@@ -43,16 +43,14 @@ end
   end
 end
 
-# Install JBoss.
-#jboss_install_log = File.join(dcm4chee.basedir, 'install_jboss.log')
-# execute "./bin/install_jboss.sh #{jboss.basedir} > #{jboss_install_log}" do
-#   cwd dcm4chee.basedir
-#   creates jboss_install_log
-# end
-#
-# # Install DCM4CHEE-ARR.
-# dcm4chee_arr_install_log = File.join(dcm4chee.basedir, 'install_dcm4chee_arr.log')
-# execute "./bin/install_arr.sh #{dcm4chee_arr.basedir} > #{dcm4chee_arr_install_log}" do
-#   cwd dcm4chee.basedir
-#   creates dcm4chee_arr_install_log
-# end
+# Run the install scripts for JBoss and DCM4CHEE-ARR.
+jboss_install_log = File.join(dcm4chee.basedir, 'install_jboss.log')
+execute "./bin/install_jboss.sh #{jboss.basedir} > #{jboss_install_log}" do
+  cwd dcm4chee.basedir
+  creates jboss_install_log
+end
+dcm4chee_arr_install_log = File.join(dcm4chee.basedir, 'install_arr.log')
+execute "./bin/install_arr.sh #{dcm4chee_arr.basedir} > #{dcm4chee_arr_install_log}" do
+  cwd dcm4chee.basedir
+  creates dcm4chee_arr_install_log
+end

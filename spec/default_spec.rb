@@ -1,9 +1,13 @@
 require 'spec_helper'
 
 describe 'dcm4chee::default' do
-  let(:chef_run) { ChefSpec::ChefRunner.new({:evaluate_guards => true}) }
-  let(:tmp) { Chef::Config[:file_cache_path] }
-  let(:prefix) { '/usr/local' }
+  let(:chef_run)             { ChefSpec::ChefRunner.new({:evaluate_guards => true}) }
+  let(:tmp)                  { Chef::Config[:file_cache_path] }
+  let(:prefix)               { '/usr/local' }
+  let(:dcm4chee_basedir)     { "#{prefix}/dcm4chee-2.17.1-mysql" }
+  let(:jboss_basedir)        { "#{prefix}/jboss-4.2.3.GA" }
+  let(:dcm4chee_arr_basedir) { "#{prefix}/dcm4chee-arr-3.0.11-mysql" }
+
   before(:each) { ::File.stub(:exists?).and_call_original }
 
   def converge!
@@ -116,10 +120,19 @@ describe 'dcm4chee::default' do
     )
   end
 
-#  it 'installs jboss' do
-#    converge!
-#    expect(chef_run).to execute_command("./bin/install_jboss.sh #{prefix}/jboss-4.2.3.GA").with(
-#      :cwd => '/usr/local/dcm4chee-2.17.1-mysql'
-#    )
-#  end
+  it 'installs jboss' do
+    converge!
+    expect(chef_run).to execute_command("./bin/install_jboss.sh #{jboss_basedir} > #{dcm4chee_basedir}/install_jboss.log").with(
+      :cwd => dcm4chee_basedir,
+      :creates => "#{dcm4chee_basedir}/install_jboss.log"
+    )
+  end
+
+  it 'installs dcm4chee-arr' do
+    converge!
+    expect(chef_run).to execute_command("./bin/install_arr.sh #{dcm4chee_arr_basedir} > #{dcm4chee_basedir}/install_arr.log").with(
+      :cwd => dcm4chee_basedir,
+      :creates => "#{dcm4chee_basedir}/install_arr.log"
+    )
+  end
 end
