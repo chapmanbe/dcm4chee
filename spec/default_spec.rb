@@ -95,7 +95,7 @@ describe 'dcm4chee::default' do
   end
 
   # TODO: Change lib to linux 64 bit!
-  it 'does not downloads jai-imageio when the basedir is present' do
+  it 'does not download jai-imageio when the basedir is present' do
     File.should_receive(:exists?).with('/usr/local/jai_imageio-1_1').and_return(true)
     converge!
     expect(chef_run).to_not create_remote_file("#{tmp}/jai_imageio-1_1-lib-solaris-amd64.tar.gz")
@@ -114,11 +114,5 @@ describe 'dcm4chee::default' do
       :cwd => prefix,
       :creates => "#{prefix}/jai_imageio-1_1"
     )
-  end
-
-  # TODO: Change lib to linux 64 bit!
-  it 'does not unzip a tarball' do
-    converge!
-    expect(chef_run).to_not execute_command("unzip #{tmp}/jai_imageio-1_1-lib-solaris-amd64.tar.gz")
   end
 end
