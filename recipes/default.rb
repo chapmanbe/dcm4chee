@@ -17,25 +17,28 @@
 # limitations under the License.
 #
 
-package "unzip" do
+
+package 'unzip' do
   action :install
 end
 
-# Download and extract the source archives for DCM4CHEE, JBoss, etc.
-node[:dcm4chee][:source].each do |name, attributes|
-  prefix         = node[:dcm4chee][:prefix] # Here we install everything.
-  source_archive = Source.new(attributes)
-  destination    = File.join(prefix, source_archive.filename)
-  basedir        = File.join(prefix, source_archive.basename)
+# Download and unpack all archives.
+%w[dcm4chee jboss dcm4chee_arr jai_imageio].each do |name|
+  archive     = node[:dcm4chee][:source][name]
+  url         = archive[:source]
+  destination = File.join Chef::Config[:file_cache_path], filename(url)
+  basedir     = File.join node[:dcm4chee][:prefix],
+    (archive[:basename] || basename(url))
 
   remote_file destination do
-    source source_archive.url
-    checksum source_archive.checksum
+    source url
+    checksum archive[:checksum]
+    not_if { ::File.exists? basedir }
   end
 
-  command = source_archive.zip? ? "unzip" : "tar -xzf"
+  command = filename(url) =~ /\.zip$/ ? 'unzip' : 'tar -xzf'
   execute "#{command} #{destination}" do
-    cwd prefix
+    cwd node[:dcm4chee][:prefix]
     creates basedir
   end
 end
