@@ -6,9 +6,13 @@ describe 'dcm4chee::default' do
   let(:prefix)               { '/usr/local' }
   let(:dcm4chee_basedir)     { "#{prefix}/dcm4chee-2.17.1-mysql" }
   let(:jboss_basedir)        { "#{prefix}/jboss-4.2.3.GA" }
+  let(:jai_imageio_basedir)  { "#{prefix}/jai_imageio-1_1" }
   let(:dcm4chee_arr_basedir) { "#{prefix}/dcm4chee-arr-3.0.11-mysql" }
 
-  before(:each) { ::File.stub(:exists?).and_call_original }
+  before(:each) do
+    ::File.stub(:exists?).and_call_original
+    ::FileUtils.stub(:identical?).and_call_original
+  end
 
   def converge!
     chef_run.converge 'dcm4chee::default'
@@ -134,5 +138,34 @@ describe 'dcm4chee::default' do
       :cwd => dcm4chee_basedir,
       :creates => "#{dcm4chee_basedir}/install_arr.log"
     )
+  end
+
+  [
+    'clib_jiio.dll',
+    'clib_jiio_sse2.dll',
+    'clib_jiio_util.dll'
+  ].each do |dll|
+    it "removes #{dll}" do
+      converge!
+      expect(chef_run).to delete_file "#{dcm4chee_basedir}/bin/native/#{dll}"
+    end
+  end
+
+  {
+    'jai_imageio.jar'      => 'server/default/lib',
+    'clibwrapper_jiio.jar' => 'server/default/lib',
+    'libclib_jiio.so'      => 'bin/native'
+  }.each_pair do |file, target_dir|
+    it "copies #{file} unless already done" do
+      src = "#{jai_imageio_basedir}/lib/#{file}"
+      dst = "#{dcm4chee_basedir}/#{target_dir}/#{file}"
+      cmd = "cp #{src} #{dst}"
+      FileUtils.should_receive(:identical?).with(src, dst).
+        and_return(false, true)
+      converge!
+      expect(chef_run).to execute_command cmd
+      converge!
+      expect(chef_run).to_not execute_command cmd
+    end
   end
 end

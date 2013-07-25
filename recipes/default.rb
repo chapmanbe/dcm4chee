@@ -54,3 +54,22 @@ execute "./bin/install_arr.sh #{dcm4chee_arr.basedir} > #{dcm4chee_arr_install_l
   cwd dcm4chee.basedir
   creates dcm4chee_arr_install_log
 end
+
+# Install Jai-Imageio.
+%w[clib_jiio.dll clib_jiio_sse2.dll clib_jiio_util.dll].each do |dll|
+  file File.join(dcm4chee.basedir, 'bin', 'native', dll) do
+    action :delete
+    backup false
+  end
+end
+{
+  'jai_imageio.jar'      => 'server/default/lib',
+  'clibwrapper_jiio.jar' => 'server/default/lib',
+  'libclib_jiio.so'      => 'bin/native'
+}.each_pair do |file, target_dir|
+  src = File.join(jai_imageio.basedir, 'lib', file)
+  dst = File.join(dcm4chee.basedir, target_dir, file)
+  execute "cp #{src} #{dst}" do
+    not_if { FileUtils.identical? src, dst }
+  end
+end
