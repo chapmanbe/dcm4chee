@@ -1,3 +1,4 @@
+name             'dcm4chee'
 maintainer       "Björn Albers"
 maintainer_email "bjoernalbers@googlemail.com"
 license          "Apache 2.0"
