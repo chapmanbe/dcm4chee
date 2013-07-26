@@ -23,13 +23,6 @@ class RemotePackage
     package[:checksum]
   end
 
-  # Return the destination where to store the package.
-  #
-  # @returns [String]
-  def destination
-    File.join Chef::Config[:file_cache_path], filename
-  end
-
   # Returns the basedir where the package will be installed.
   #
   # @returns [String]
@@ -52,6 +45,13 @@ class RemotePackage
     @node[:dcm4chee][:prefix]
   end
 
+  # Return the filename taken from the package URL.
+  #
+  # @returns [String]
+  def filename
+    source[/^.+\/(.+)$/,1]
+  end
+
   private
 
   # Return the attribute sub-tree for the given remote package.
@@ -59,12 +59,5 @@ class RemotePackage
   # @returns [Hash]
   def package
     @node[:dcm4chee][:source][@name]
-  end
-
-  # Return the filename taken from the package URL.
-  #
-  # @returns [String]
-  def filename
-    source[/^.+\/(.+)$/,1]
   end
 end

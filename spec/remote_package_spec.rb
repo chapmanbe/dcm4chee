@@ -29,12 +29,6 @@ describe RemotePackage do
     end
   end
 
-  describe '#destination' do
-    it 'returns the destination' do
-      expect(pkg.destination).to eq "#{Chef::Config[:file_cache_path]}/foo.zip"
-    end
-  end
-
   describe '#basename' do
     context 'when explicitely set' do
       before do

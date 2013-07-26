@@ -30,14 +30,15 @@ end
 
 # Download and unpack all packages.
 [dcm4chee, jboss, dcm4chee_arr, jai_imageio].each do |pkg|
-  remote_file pkg.destination do
+  destination = File.join Chef::Config[:file_cache_path], pkg.filename
+  remote_file destination do
     source pkg.source
     checksum pkg.checksum
     not_if { ::File.exists? pkg.basedir }
   end
 
   command = pkg.source =~ /\.zip$/ ? 'unzip' : 'tar -xzf'
-  execute "#{command} #{pkg.destination}" do
+  execute "#{command} #{destination}" do
     cwd pkg.prefix
     creates pkg.basedir
   end
