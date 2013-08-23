@@ -17,6 +17,8 @@
 # limitations under the License.
 #
 
+include_recipe 'mysql::server'
+
 # Initialize some helpers.
 dcm4chee     = RemotePackage.new :dcm4chee, node
 dcm4chee_arr = RemotePackage.new :dcm4chee_arr, node
