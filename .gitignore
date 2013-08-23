@@ -1,6 +1,18 @@
-/.rspec
-/.bundle/
-/vendor/
-/bin/
-/tmp/
-/Gemfile.lock
+.vagrant
+Berksfile.lock
+*~
+*#
+.#*
+\#*#
+.*.sw[a-z]
+*.un~
+/cookbooks
+
+# Bundler
+Gemfile.lock
+bin/*
+.bundle/*
+
+tmp
+vendor
+.rspec
