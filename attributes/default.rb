@@ -35,3 +35,15 @@ default[:dcm4chee][:source] = {
     :checksum => '05a89e7d0a90d2da81c27b6d945db7ded59636ea6d45043556628bde7462b5fe'
   }
 }
+# NOTE: Dcm4chee always uses the default parameters, even if us overwrite these
+# attributes!
+default[:dcm4chee][:pacsdb] = {
+  :name     => 'pacsdb',
+  :user     => 'pacs',
+  :password => 'pacs'
+}
+default[:dcm4chee][:arrdb] = {
+  :name     => 'arrdb',
+  :user     => 'arr',
+  :password => 'arr'
+}

@@ -18,6 +18,7 @@
 #
 
 include_recipe 'mysql::server'
+include_recipe 'database::mysql'
 
 # Initialize some helpers.
 dcm4chee     = RemotePackage.new :dcm4chee, node
@@ -94,5 +95,52 @@ end
   remote_file dst do
     source pkg.source
     checksum pkg.checksum
+  end
+end
+
+# Create the PACS and ARR databases and grant permissions.
+# TODO: Manage database configuration as template (see
+# http://www.dcm4che.org/confluence/display/ee2/MySQL)!
+mysql_connection_params = {
+  :host     => 'localhost',
+  :username => 'root',
+  :password => node[:mysql][:server_root_password]
+}
+pacsdb_sql_file = File.join(dcm4chee.basedir,'sql', 'create.mysql')
+arrdb_sql_file  = File.join(dcm4chee_arr.basedir,'sql',
+                            'dcm4chee-arr-mysql.ddl')
+# See bug http://www.dcm4che.org/jira/browse/ARR-123
+ruby_block "fix #{arrdb_sql_file}" do
+  block do
+    rc = Chef::Util::FileEdit.new(arrdb_sql_file)
+    rc.search_file_replace(/type=/, 'engine=')
+    rc.write_file
+  end
+end
+{
+  'pacsdb' => pacsdb_sql_file,
+  'arrdb'  => arrdb_sql_file
+}.each_pair do |db, sql_file|
+  database = node[:dcm4chee][db]
+
+  mysql_database database[:name] do
+    connection mysql_connection_params
+    action :create
+    notifies :query, "mysql_database[initialize #{database[:name]}]",
+      :immediately
+  end
+
+  mysql_database "initialize #{database[:name]}" do
+    connection mysql_connection_params
+    database_name database[:name]
+    sql { ::File.open(sql_file).read }
+    action :nothing
+  end
+
+  mysql_database_user database[:user] do
+    connection mysql_connection_params
+    password database[:password]
+    database_name database[:name]
+    action :grant
   end
 end
