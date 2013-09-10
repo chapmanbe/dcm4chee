@@ -19,6 +19,7 @@
 
 include_recipe 'mysql::server'
 include_recipe 'database::mysql'
+include_recipe 'java'
 
 # Initialize some helpers.
 dcm4chee     = RemotePackage.new :dcm4chee, node

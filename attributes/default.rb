@@ -47,3 +47,11 @@ default[:dcm4chee][:arrdb] = {
   :user     => 'arr',
   :password => 'arr'
 }
+
+# Install Oracle Java
+set[:java] = {
+  :install_flavor => 'oracle',
+  :oracle => {
+    :accept_oracle_download_terms => true
+  }
+}
