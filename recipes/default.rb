@@ -161,3 +161,16 @@ end
     action :grant
   end
 end
+
+# Create init and config files to run dcm4chee.
+template '/etc/init.d/dcm4chee' do
+  source 'dcm4chee.erb'
+  mode 0755
+  owner 'root'
+  group 'root'
+end
+template File.join(dcm4chee.basedir, 'bin', 'run.conf') do
+  source 'run.conf.erb'
+  owner node[:dcm4chee][:user]
+  mode 0644
+end
