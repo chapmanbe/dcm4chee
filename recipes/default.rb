@@ -60,6 +60,11 @@ execute "./bin/install_arr.sh #{dcm4chee_arr.basedir} > #{dcm4chee_arr_install_l
   creates dcm4chee_arr_install_log
 end
 
+# Create symlink for convenience.
+link File.join(dcm4chee.prefix, 'dcm4chee') do
+  to dcm4chee.basedir
+end
+
 # Install Jai-Imageio.
 %w[clib_jiio.dll clib_jiio_sse2.dll clib_jiio_util.dll].each do |dll|
   file File.join(dcm4chee.basedir, 'bin', 'native', dll) do
