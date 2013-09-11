@@ -104,6 +104,17 @@ end
   end
 end
 
+# Create system user and update ownership for installation.
+user node[:dcm4chee][:user] do
+  comment 'DCM4CHEE PACS'
+  home dcm4chee.basedir
+  system true
+end
+# TODO: Run this commmand only once!
+ruby_block "change ownership for #{dcm4chee.basedir}" do
+  block { FileUtils.chown_R node[:dcm4chee][:user], nil, dcm4chee.basedir }
+end
+
 # Create the PACS and ARR databases and grant permissions.
 # TODO: Manage database configuration as template (see
 # http://www.dcm4che.org/confluence/display/ee2/MySQL)!

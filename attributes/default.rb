@@ -1,4 +1,5 @@
-default[:dcm4chee][:prefix] = "/usr/local"
+default[:dcm4chee][:prefix] = '/usr/local'
+default[:dcm4chee][:user]   = 'dcm4chee'
 
 default[:dcm4chee][:source] = {
   :jboss => {
