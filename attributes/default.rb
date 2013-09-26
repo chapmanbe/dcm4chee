@@ -15,8 +15,8 @@ default[:dcm4chee][:source] = {
     :checksum => "7597cf96620c58edf4a00499adbcd8f26a78c3c5127ebfa8567810bb0dc737b6"
   },
   :jai_imageio => {
-    :source   => "http://download.java.net/media/jai-imageio/builds/release/1.1/jai_imageio-1_1-lib-solaris-amd64.tar.gz",
-    :checksum => "3d3ffb3d7b54d1d4f4abea824ec0bdf9d95223439b602d640e729832a1cb3008",
+    :source   => "http://download.java.net/media/jai-imageio/builds/release/1.1/jai_imageio-1_1-lib-linux-amd64.tar.gz",
+    :checksum => "78f24c75b70a93b82de05c9a024574973f2ee71c25bf068d470e5abd511fb49a",
     :basename => "jai_imageio-1_1" # Overwrite the basename because it differs from the source archive filename.
   },
   :weasis => {
