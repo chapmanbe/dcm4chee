@@ -9,6 +9,14 @@ describe 'dcm4chee::default' do
   let(:jai_imageio_basedir)  { "#{prefix}/jai_imageio-1_1" }
   let(:dcm4chee_arr_basedir) { "#{prefix}/dcm4chee-arr-3.0.11-mysql" }
 
+  let(:jai_imageio) do
+    {
+      destination: "#{tmp}/jai_imageio-1_1-lib-linux-amd64.tar.gz",
+      url: 'http://download.java.net/media/jai-imageio/builds/release/1.1/jai_imageio-1_1-lib-linux-amd64.tar.gz',
+      checksum: '78f24c75b70a93b82de05c9a024574973f2ee71c25bf068d470e5abd511fb49a'
+    }
+  end
+
   before(:each) do
     ::File.stub(:exists?).and_call_original
     ::FileUtils.stub(:identical?).and_call_original
@@ -98,35 +106,31 @@ describe 'dcm4chee::default' do
     )
   end
 
-  # TODO: Change lib to linux 64 bit!
   it 'downloads jai-imageio when the basedir is missing' do
     File.should_receive(:exists?).with('/usr/local/jai_imageio-1_1').and_return(false)
     converge!
-    expect(chef_run).to create_remote_file("#{tmp}/jai_imageio-1_1-lib-solaris-amd64.tar.gz").with(
-      :source => 'http://download.java.net/media/jai-imageio/builds/release/1.1/jai_imageio-1_1-lib-solaris-amd64.tar.gz',
-      :checksum => '3d3ffb3d7b54d1d4f4abea824ec0bdf9d95223439b602d640e729832a1cb3008'
+    expect(chef_run).to create_remote_file(jai_imageio[:destination]).with(
+      source: jai_imageio[:url],
+      checksum: jai_imageio[:checksum]
     )
   end
 
-  # TODO: Change lib to linux 64 bit!
   it 'does not download jai-imageio when the basedir is present' do
     File.should_receive(:exists?).with('/usr/local/jai_imageio-1_1').and_return(true)
     converge!
-    expect(chef_run).to_not create_remote_file("#{tmp}/jai_imageio-1_1-lib-solaris-amd64.tar.gz")
+    expect(chef_run).to_not create_remote_file(jai_imageio[:destination])
   end
 
-  # TODO: Change lib to linux 64 bit!
   it 'does not unzip a tarball' do
     converge!
-    expect(chef_run).to_not execute_command("unzip #{tmp}/jai_imageio-1_1-lib-solaris-amd64.tar.gz")
+    expect(chef_run).to_not execute_command("unzip #{jai_imageio[:destination]}")
   end
 
-  # TODO: Change lib to linux 64 bit!
   it 'unpacks jai-imageio' do
     converge!
-    expect(chef_run).to execute_command("tar -xzf #{tmp}/jai_imageio-1_1-lib-solaris-amd64.tar.gz").with(
-      :cwd => prefix,
-      :creates => "#{prefix}/jai_imageio-1_1"
+    expect(chef_run).to execute_command("tar -xzf #{jai_imageio[:destination]}").with(
+      cwd: prefix,
+      creates: "#{prefix}/jai_imageio-1_1"
     )
   end
 
