@@ -9,11 +9,32 @@ describe 'dcm4chee::default' do
   let(:jai_imageio_basedir)  { "#{prefix}/jai_imageio-1_1" }
   let(:dcm4chee_arr_basedir) { "#{prefix}/dcm4chee-arr-3.0.11-mysql" }
 
-  let(:jai_imageio) do
+  let(:packages) do
     {
-      destination: "#{tmp}/jai_imageio-1_1-lib-linux-amd64.tar.gz",
-      url: 'http://download.java.net/media/jai-imageio/builds/release/1.1/jai_imageio-1_1-lib-linux-amd64.tar.gz',
-      checksum: '78f24c75b70a93b82de05c9a024574973f2ee71c25bf068d470e5abd511fb49a'
+      dcm4chee: {
+        url:      'http://downloads.sourceforge.net/project/dcm4che/dcm4chee/2.17.1/dcm4chee-2.17.1-mysql.zip',
+        filename: 'dcm4chee-2.17.1-mysql.zip',
+        basedir:  'dcm4chee-2.17.1-mysql',
+        checksum: '7597cf96620c58edf4a00499adbcd8f26a78c3c5127ebfa8567810bb0dc737b6'
+      },
+      jboss: {
+        url:      'http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-4.2.3.GA/jboss-4.2.3.GA.zip',
+        filename: 'jboss-4.2.3.GA.zip',
+        basedir:  'jboss-4.2.3.GA',
+        checksum: 'a5d518286dae6ea432a6f7a5506c2338ad1751ae4b6d7ce2082436b2d3f87f46'
+      },
+      dcm4chee_arr: {
+        url:      'http://downloads.sourceforge.net/project/dcm4che/dcm4chee-arr/3.0.11/dcm4chee-arr-3.0.11-mysql.zip',
+        filename: 'dcm4chee-arr-3.0.11-mysql.zip',
+        basedir:  'dcm4chee-arr-3.0.11-mysql',
+        checksum: '3de87af391d127b04da8000a1398622283cbb0dc4ffa4a769d8d45a106b43f94'
+      },
+      jai_imageio: {
+        url:      'http://download.java.net/media/jai-imageio/builds/release/1.1/jai_imageio-1_1-lib-linux-amd64.tar.gz',
+        filename: 'jai_imageio-1_1-lib-linux-amd64.tar.gz',
+        basedir:  'jai_imageio-1_1',
+        checksum: '78f24c75b70a93b82de05c9a024574973f2ee71c25bf068d470e5abd511fb49a'
+      }
     }
   end
 
@@ -27,7 +48,6 @@ describe 'dcm4chee::default' do
     #chef_run.node.set[:mysql][:server_repl_password]   = secure_password
   end
 
-
   def converge!
     chef_run.converge 'dcm4chee::default'
   end
@@ -37,101 +57,38 @@ describe 'dcm4chee::default' do
     expect(chef_run).to install_package('unzip')
   end
 
-  it 'downloads dcm4chee when the basedir is missing' do
-    File.should_receive(:exists?).with('/usr/local/dcm4chee-2.17.1-mysql').and_return(false)
-    converge!
-    expect(chef_run).to create_remote_file("#{tmp}/dcm4chee-2.17.1-mysql.zip").with(
-      :source => 'http://downloads.sourceforge.net/project/dcm4che/dcm4chee/2.17.1/dcm4chee-2.17.1-mysql.zip',
-      :checksum => '7597cf96620c58edf4a00499adbcd8f26a78c3c5127ebfa8567810bb0dc737b6'
-    )
+  [ :dcm4chee, :jboss, :dcm4chee_arr, :jai_imageio ].each do |name|
+    it "downloads #{name}" do
+      pkg = packages[name]
+      File.should_receive(:exists?).with("#{prefix}/#{pkg[:basedir]}").and_return(false) # TODO: Remove this!
+      converge!
+      expect(chef_run).to create_remote_file("#{tmp}/#{pkg[:filename]}").with(
+        source: pkg[:url],
+        checksum: pkg[:checksum]
+      )
+    end
   end
 
-  it 'does not download dcm4chee when the basedir is present' do
-    File.should_receive(:exists?).with('/usr/local/dcm4chee-2.17.1-mysql').and_return(true)
-    converge!
-    expect(chef_run).to_not create_remote_file("#{tmp}/dcm4chee-2.17.1-mysql.zip")
+  [ :dcm4chee, :jboss, :dcm4chee_arr ].each do |name|
+    it "unpacks #{name}" do
+      converge!
+      pkg = packages[name]
+      expect(chef_run).to execute_command("unzip #{tmp}/#{pkg[:filename]}").with(
+        cwd: prefix,
+        creates: "#{prefix}/#{pkg[:basedir]}"
+      )
+    end
   end
 
-  it 'unpacks dcm4chee' do
-    converge!
-    expect(chef_run).to execute_command("unzip #{tmp}/dcm4chee-2.17.1-mysql.zip").with(
-      :cwd => "/usr/local",
-      :creates => "/usr/local/dcm4chee-2.17.1-mysql"
-    )
-  end
-
-  it 'downloads jboss when the basedir is missing' do
-    File.should_receive(:exists?).with('/usr/local/jboss-4.2.3.GA').and_return(false)
-    converge!
-    expect(chef_run).to create_remote_file("#{tmp}/jboss-4.2.3.GA.zip").with(
-      :source => 'http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-4.2.3.GA/jboss-4.2.3.GA.zip',
-      :checksum => 'a5d518286dae6ea432a6f7a5506c2338ad1751ae4b6d7ce2082436b2d3f87f46'
-    )
-  end
-
-  it 'does not download jboss when the basedir is present' do
-    File.should_receive(:exists?).with('/usr/local/jboss-4.2.3.GA').and_return(true)
-    converge!
-    expect(chef_run).to_not create_remote_file("#{tmp}/jboss-4.2.3.GA.zip")
-  end
-
-  it 'unpacks jboss' do
-    converge!
-    expect(chef_run).to execute_command("unzip #{tmp}/jboss-4.2.3.GA.zip").with(
-      :cwd => prefix,
-      :creates => "#{prefix}/jboss-4.2.3.GA"
-    )
-  end
-
-  it 'downloads dcm4chee-arr when the basedir is missing' do
-    File.should_receive(:exists?).with('/usr/local/dcm4chee-arr-3.0.11-mysql').and_return(false)
-    converge!
-    expect(chef_run).to create_remote_file("#{tmp}/dcm4chee-arr-3.0.11-mysql.zip").with(
-      :source => 'http://downloads.sourceforge.net/project/dcm4che/dcm4chee-arr/3.0.11/dcm4chee-arr-3.0.11-mysql.zip',
-      :checksum => '3de87af391d127b04da8000a1398622283cbb0dc4ffa4a769d8d45a106b43f94'
-    )
-  end
-
-  it 'does not download dcm4chee-arr when the basedir is present' do
-    File.should_receive(:exists?).with('/usr/local/dcm4chee-arr-3.0.11-mysql').and_return(true)
-    converge!
-    expect(chef_run).to_not create_remote_file("#{tmp}/dcm4chee-arr-3.0.11-mysql.zip")
-  end
-
-  it 'unpacks jboss' do
-    converge!
-    expect(chef_run).to execute_command("unzip #{tmp}/dcm4chee-arr-3.0.11-mysql.zip").with(
-      :cwd => prefix,
-      :creates => "#{prefix}/dcm4chee-arr-3.0.11-mysql"
-    )
-  end
-
-  it 'downloads jai-imageio when the basedir is missing' do
-    File.should_receive(:exists?).with('/usr/local/jai_imageio-1_1').and_return(false)
-    converge!
-    expect(chef_run).to create_remote_file(jai_imageio[:destination]).with(
-      source: jai_imageio[:url],
-      checksum: jai_imageio[:checksum]
-    )
-  end
-
-  it 'does not download jai-imageio when the basedir is present' do
-    File.should_receive(:exists?).with('/usr/local/jai_imageio-1_1').and_return(true)
-    converge!
-    expect(chef_run).to_not create_remote_file(jai_imageio[:destination])
-  end
-
-  it 'does not unzip a tarball' do
-    converge!
-    expect(chef_run).to_not execute_command("unzip #{jai_imageio[:destination]}")
-  end
-
-  it 'unpacks jai-imageio' do
-    converge!
-    expect(chef_run).to execute_command("tar -xzf #{jai_imageio[:destination]}").with(
-      cwd: prefix,
-      creates: "#{prefix}/jai_imageio-1_1"
-    )
+  [ :jai_imageio].each do |name|
+    it "unpacks #{name}" do
+      converge!
+      pkg = packages[name]
+      expect(chef_run).to execute_command("tar -xzf #{tmp}/#{pkg[:filename]}").with(
+        cwd: prefix,
+        creates: "#{prefix}/#{pkg[:basedir]}"
+      )
+    end
   end
 
   it 'installs jboss' do
