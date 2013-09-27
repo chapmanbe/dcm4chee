@@ -50,7 +50,7 @@ default[:dcm4chee][:arrdb] = {
 }
 
 # MySQL should only listen on localhost (was on eth0 before!).
-set['mysql']['bind_address'] = '127.0.0.1'
+set[:mysql][:bind_address] = '127.0.0.1'
 
 # Install Oracle Java
 set[:java] = {
