@@ -12,7 +12,13 @@ describe 'dcm4chee::default' do
   before(:each) do
     ::File.stub(:exists?).and_call_original
     ::FileUtils.stub(:identical?).and_call_original
+
+    #secure_password = 'foo'
+    #chef_run.node.set[:mysql][:server_debian_password] = secure_password
+    #chef_run.node.set[:mysql][:server_root_password]   = secure_password
+    #chef_run.node.set[:mysql][:server_repl_password]   = secure_password
   end
+
 
   def converge!
     chef_run.converge 'dcm4chee::default'
