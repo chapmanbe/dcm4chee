@@ -38,13 +38,15 @@ end
   remote_file destination do
     source pkg.source
     checksum pkg.checksum
-    not_if { ::File.exists? pkg.basedir }
+    notifies :run, "execute[unpack #{destination}]", :immediately
   end
 
-  command = pkg.source =~ /\.zip$/ ? 'unzip' : 'tar -xzf'
-  execute "#{command} #{destination}" do
+  cmd = pkg.source =~ /\.zip$/ ? 'unzip' : 'tar -xzf'
+  execute "unpack #{destination}" do
+    command "#{cmd} #{destination}"
     cwd pkg.prefix
     creates pkg.basedir
+    action :nothing
   end
 end
 

@@ -59,12 +59,15 @@ describe 'dcm4chee::default' do
 
   [ :dcm4chee, :jboss, :dcm4chee_arr, :jai_imageio ].each do |name|
     it "downloads #{name}" do
-      pkg = packages[name]
-      File.should_receive(:exists?).with("#{prefix}/#{pkg[:basedir]}").and_return(false) # TODO: Remove this!
       converge!
-      expect(chef_run).to create_remote_file("#{tmp}/#{pkg[:filename]}").with(
+      pkg = packages[name]
+      destination = "#{tmp}/#{pkg[:filename]}"
+      expect(chef_run).to create_remote_file(destination).with(
         source: pkg[:url],
         checksum: pkg[:checksum]
+      )
+      expect(chef_run.remote_file(destination)).to notify(
+        "execute[unpack #{destination}]", :run
       )
     end
   end
@@ -73,9 +76,12 @@ describe 'dcm4chee::default' do
     it "unpacks #{name}" do
       converge!
       pkg = packages[name]
-      expect(chef_run).to execute_command("unzip #{tmp}/#{pkg[:filename]}").with(
+      destination = "#{tmp}/#{pkg[:filename]}"
+      expect(chef_run).to execute_command("unzip #{destination}").with(
         cwd: prefix,
         creates: "#{prefix}/#{pkg[:basedir]}"
+        # TODO: Check that this does nothing by default (currently not
+        # supported in in chefspec!
       )
     end
   end
@@ -87,6 +93,8 @@ describe 'dcm4chee::default' do
       expect(chef_run).to execute_command("tar -xzf #{tmp}/#{pkg[:filename]}").with(
         cwd: prefix,
         creates: "#{prefix}/#{pkg[:basedir]}"
+        # TODO: Check that this does nothing by default (currently not
+        # supported in in chefspec!
       )
     end
   end
