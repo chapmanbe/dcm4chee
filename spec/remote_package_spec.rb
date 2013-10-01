@@ -4,12 +4,9 @@ describe RemotePackage do
   let(:node) do
     {
       :dcm4chee => {
-        #TODO: Rename to 'packages' or 'remote_packages'!
-        :source => {
-          :foo  => {
-            :source => 'http://www.example.com/foo.zip',
-            :checksum => 'deadbeef'
-          }
+        :foo  => {
+          :source => 'http://www.example.com/foo.zip',
+          :checksum => 'deadbeef'
         }
       }
     }
@@ -32,7 +29,7 @@ describe RemotePackage do
   describe '#basename' do
     context 'when explicitely set' do
       before do
-        node[:dcm4chee][:source][:foo][:basename] = 'bar'
+        node[:dcm4chee][:foo][:basename] = 'bar'
       end
 
       it 'returns the attribute' do
@@ -42,7 +39,7 @@ describe RemotePackage do
 
     context 'when not set' do
       before do
-        node[:dcm4chee][:source][:foo][:basename] = nil
+        node[:dcm4chee][:foo][:basename] = nil
       end
 
       it 'returns the basename based on the filename' do

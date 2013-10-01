@@ -78,8 +78,7 @@ describe 'dcm4chee::default' do
       pkg = packages[name]
       destination = "#{tmp}/#{pkg[:filename]}"
       expect(chef_run).to execute_command("unzip #{destination}").with(
-        cwd: prefix,
-        creates: "#{prefix}/#{pkg[:basedir]}"
+        cwd: prefix#,
         # TODO: Check that this does nothing by default (currently not
         # supported in in chefspec!
       )
@@ -91,8 +90,7 @@ describe 'dcm4chee::default' do
       converge!
       pkg = packages[name]
       expect(chef_run).to execute_command("tar -xzf #{tmp}/#{pkg[:filename]}").with(
-        cwd: prefix,
-        creates: "#{prefix}/#{pkg[:basedir]}"
+        cwd: prefix
         # TODO: Check that this does nothing by default (currently not
         # supported in in chefspec!
       )
@@ -101,17 +99,15 @@ describe 'dcm4chee::default' do
 
   it 'installs jboss' do
     converge!
-    expect(chef_run).to execute_command("./bin/install_jboss.sh #{jboss_basedir} > #{dcm4chee_basedir}/install_jboss.log").with(
-      :cwd => dcm4chee_basedir,
-      :creates => "#{dcm4chee_basedir}/install_jboss.log"
+    expect(chef_run).to execute_command("./bin/install_jboss.sh #{jboss_basedir}").with(
+      :cwd => dcm4chee_basedir
     )
   end
 
   it 'installs dcm4chee-arr' do
     converge!
-    expect(chef_run).to execute_command("./bin/install_arr.sh #{dcm4chee_arr_basedir} > #{dcm4chee_basedir}/install_arr.log").with(
-      :cwd => dcm4chee_basedir,
-      :creates => "#{dcm4chee_basedir}/install_arr.log"
+    expect(chef_run).to execute_command("./bin/install_arr.sh #{dcm4chee_arr_basedir}").with(
+      :cwd => dcm4chee_basedir
     )
   end
 

@@ -17,59 +17,49 @@
 # limitations under the License.
 #
 
-include_recipe 'mysql::server'
-include_recipe 'database::mysql'
-include_recipe 'java'
+#include_recipe 'mysql::server'
+#include_recipe 'database::mysql'
+#include_recipe 'java'
 
-# Initialize some helpers.
-dcm4chee     = RemotePackage.new :dcm4chee, node
-dcm4chee_arr = RemotePackage.new :dcm4chee_arr, node
-jboss        = RemotePackage.new :jboss, node
-jai_imageio  = RemotePackage.new :jai_imageio, node
+dcm4chee_basedir = basedir(:dcm4chee)
 
 # Required to unpack the remote packages.
 package 'unzip' do
   action :install
 end
 
-# Download and unpack all packages.
-[dcm4chee, jboss, dcm4chee_arr, jai_imageio].each do |pkg|
-  destination = File.join Chef::Config[:file_cache_path], pkg.filename
+[:dcm4chee, :jboss, :dcm4chee_arr, :jai_imageio].each do |pkg|
+  destination = File.join Chef::Config[:file_cache_path], filename(pkg)
   remote_file destination do
-    source pkg.source
-    checksum pkg.checksum
-    notifies :run, "execute[unpack #{destination}]", :immediately
+    source   node[:dcm4chee][pkg][:source]
+    checksum node[:dcm4chee][pkg][:checksum]
   end
 
-  cmd = pkg.source =~ /\.zip$/ ? 'unzip' : 'tar -xzf'
+  cmd = filename(pkg) =~ /\.zip$/ ? 'unzip' : 'tar -xzf'
   execute "unpack #{destination}" do
     command "#{cmd} #{destination}"
-    cwd pkg.prefix
-    creates pkg.basedir
-    action :nothing
+    cwd node[:dcm4chee][:prefix]
+    #action :nothing
+    subscribes :run, "remote_file[#{destination}]", :immediately
   end
 end
 
 # Run the install scripts for JBoss and DCM4CHEE-ARR.
-jboss_install_log = File.join(dcm4chee.basedir, 'install_jboss.log')
-execute "./bin/install_jboss.sh #{jboss.basedir} > #{jboss_install_log}" do
-  cwd dcm4chee.basedir
-  creates jboss_install_log
-end
-dcm4chee_arr_install_log = File.join(dcm4chee.basedir, 'install_arr.log')
-execute "./bin/install_arr.sh #{dcm4chee_arr.basedir} > #{dcm4chee_arr_install_log}" do
-  cwd dcm4chee.basedir
-  creates dcm4chee_arr_install_log
+# NOTE: The installers won't run when new versions for dcm4chee-arr and jboss are downloaded.
+[:jboss, :dcm4chee_arr].each do |pkg|
+  execute "./bin/#{node[:dcm4chee][pkg][:installer]} #{basedir(pkg)}" do
+    cwd dcm4chee_basedir
+  end
 end
 
 # Create symlink for convenience.
-link File.join(dcm4chee.prefix, 'dcm4chee') do
-  to dcm4chee.basedir
+link File.join(node[:dcm4chee][:prefix], 'dcm4chee') do
+  to dcm4chee_basedir
 end
 
 # Install Jai-Imageio.
 %w[clib_jiio.dll clib_jiio_sse2.dll clib_jiio_util.dll].each do |dll|
-  file File.join(dcm4chee.basedir, 'bin', 'native', dll) do
+  file File.join(dcm4chee_basedir, 'bin', 'native', dll) do
     action :delete
     backup false
   end
@@ -79,8 +69,8 @@ end
   'clibwrapper_jiio.jar' => 'server/default/lib',
   'libclib_jiio.so'      => 'bin/native'
 }.each_pair do |file, target_dir|
-  src = File.join(jai_imageio.basedir, 'lib', file)
-  dst = File.join(dcm4chee.basedir, target_dir, file)
+  src = File.join(basedir(:jai_imageio), 'lib', file)
+  dst = File.join(dcm4chee_basedir, target_dir, file)
   execute "cp #{src} #{dst}" do
     not_if { FileUtils.identical? src, dst }
   end
@@ -96,73 +86,72 @@ end
   :weasis_i18n,
   :weasis_pacs_connector,
   :dcm4chee_web_weasis
-].each do |name|
-  pkg = RemotePackage.new name, node
-  dst = File.join dcm4chee.basedir, 'server', 'default', 'deploy',
-    pkg.filename
-  remote_file dst do
-    source pkg.source
-    checksum pkg.checksum
+].each do |pkg|
+  destination = File.join dcm4chee_basedir, 'server', 'default', 'deploy',
+    filename(pkg)
+  remote_file destination do
+    source   node[:dcm4chee][pkg][:source]
+    checksum node[:dcm4chee][pkg][:checksum]
   end
 end
 
 # Create system user and update ownership for installation.
 user node[:dcm4chee][:user] do
   comment 'DCM4CHEE PACS'
-  home dcm4chee.basedir
+  home dcm4chee_basedir
   system true
 end
 # TODO: Run this commmand only once!
-ruby_block "change ownership for #{dcm4chee.basedir}" do
-  block { FileUtils.chown_R node[:dcm4chee][:user], nil, dcm4chee.basedir }
+ruby_block "change ownership for #{dcm4chee_basedir}" do
+  block { FileUtils.chown_R node[:dcm4chee][:user], nil, dcm4chee_basedir }
 end
 
-# Create the PACS and ARR databases and grant permissions.
-# TODO: Manage database configuration as template (see
-# http://www.dcm4che.org/confluence/display/ee2/MySQL)!
-mysql_connection_params = {
-  :host     => 'localhost',
-  :username => 'root',
-  :password => node[:mysql][:server_root_password]
-}
-pacsdb_sql_file = File.join(dcm4chee.basedir,'sql', 'create.mysql')
-arrdb_sql_file  = File.join(dcm4chee_arr.basedir,'sql',
-                            'dcm4chee-arr-mysql.ddl')
-# See bug http://www.dcm4che.org/jira/browse/ARR-123
-ruby_block "fix #{arrdb_sql_file}" do
-  block do
-    rc = Chef::Util::FileEdit.new(arrdb_sql_file)
-    rc.search_file_replace(/type=/, 'engine=')
-    rc.write_file
-  end
-end
-{
-  'pacsdb' => pacsdb_sql_file,
-  'arrdb'  => arrdb_sql_file
-}.each_pair do |db, sql_file|
-  database = node[:dcm4chee][db]
-
-  mysql_database database[:name] do
-    connection mysql_connection_params
-    action :create
-    notifies :query, "mysql_database[initialize #{database[:name]}]",
-      :immediately
-  end
-
-  mysql_database "initialize #{database[:name]}" do
-    connection mysql_connection_params
-    database_name database[:name]
-    sql { ::File.open(sql_file).read }
-    action :nothing
-  end
-
-  mysql_database_user database[:user] do
-    connection mysql_connection_params
-    password database[:password]
-    database_name database[:name]
-    action :grant
-  end
-end
+## Create the PACS and ARR databases and grant permissions.
+## TODO: Manage database configuration as template (see
+## http://www.dcm4che.org/confluence/display/ee2/MySQL)!
+#mysql_connection_params = {
+#  :host     => 'localhost',
+#  :username => 'root',
+#  :password => node[:mysql][:server_root_password]
+#}
+#pacsdb_sql_file = File.join(dcm4chee_basedir,'sql', 'create.mysql')
+#arrdb_sql_file  = File.join(basedir(:dcm4chee_arr),'sql',
+#                            'dcm4chee-arr-mysql.ddl')
+## See bug http://www.dcm4che.org/jira/browse/ARR-123
+#ruby_block "fix #{arrdb_sql_file}" do
+#  block do
+#    rc = Chef::Util::FileEdit.new(arrdb_sql_file)
+#    rc.search_file_replace(/type=/, 'engine=')
+#    rc.write_file
+#  end
+#end
+#{
+#  'pacsdb' => pacsdb_sql_file,
+#  'arrdb'  => arrdb_sql_file
+#}.each_pair do |db, sql_file|
+#  database = node[:dcm4chee][db]
+#
+#  mysql_database database[:name] do
+#    connection mysql_connection_params
+#    action :create
+#    notifies :query, "mysql_database[initialize #{database[:name]}]",
+#      :immediately
+#  end
+#
+#  mysql_database "initialize #{database[:name]}" do
+#    connection mysql_connection_params
+#    database_name database[:name]
+#    sql { ::File.open(sql_file).read }
+#    action :nothing
+#  end
+#
+#  mysql_database_user database[:user] do
+#    connection mysql_connection_params
+#    password database[:password]
+#    database_name database[:name]
+#    action :grant
+#  end
+#end
 
 # Create init and config files to run dcm4chee.
 template '/etc/init.d/dcm4chee' do
@@ -171,7 +160,7 @@ template '/etc/init.d/dcm4chee' do
   owner 'root'
   group 'root'
 end
-template File.join(dcm4chee.basedir, 'bin', 'run.conf') do
+template File.join(dcm4chee_basedir, 'bin', 'run.conf') do
   source 'run.conf.erb'
   owner node[:dcm4chee][:user]
   mode 0644

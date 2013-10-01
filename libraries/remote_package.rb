@@ -58,6 +58,6 @@ class RemotePackage
   #
   # @returns [Hash]
   def package
-    @node[:dcm4chee][:source][@name]
+    @node[:dcm4chee][@name]
   end
 end
