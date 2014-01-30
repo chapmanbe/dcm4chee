@@ -23,9 +23,9 @@ describe 'dcm4chee::weasis' do
       :checksum => '1ae1419e60ca6eb5b76e999ebc5c9efce8c3351bc80beb99076232b883820ea6'
     }
   }.each_pair do |file,attributes|
-    it "downloads #{file} to the deploy dir" do
-      dst = "#{dcm4chee_basedir}/server/default/deploy/#{file}"
-      expect(chef_run).to create_remote_file(dst).with(attributes)
+    it "deploys #{file}" do
+      destination = "#{dcm4chee_basedir}/server/default/deploy/#{file}"
+      expect(chef_run).to create_remote_file(destination).with(attributes)
     end
   end
 end
