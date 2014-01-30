@@ -20,22 +20,6 @@ default[:dcm4chee][:jai_imageio] = {
   :checksum => "78f24c75b70a93b82de05c9a024574973f2ee71c25bf068d470e5abd511fb49a",
   :basename => "jai_imageio-1_1" # Overwrite the basename because it differs from the source archive filename.
 }
-default[:dcm4chee][:weasis] = {
-  :source   => 'http://downloads.sourceforge.net/project/dcm4che/Weasis/1.2.5/weasis.war',
-  :checksum => '7947193bfee1fdf03050e3b0c62654e5867ae565fdb7730de67780ef2d25df84'
-}
-default[:dcm4chee][:weasis_i18n] = {
-  :source   => 'http://downloads.sourceforge.net/project/dcm4che/Weasis/1.2.5/weasis-i18n.war',
-  :checksum => '59a18c777208af1dc7012214f4d969f4d1d0279116f477b33923cdfebd32b41c'
-}
-default[:dcm4chee][:weasis_pacs_connector] = {
-  :source   => 'http://downloads.sourceforge.net/project/dcm4che/Weasis/dcm4chee-web3/3.0.3-r1/weasis-pacs-connector.war',
-  :checksum => '7fd28e78ddaf9e1cce91354848895839ce4de014890513262dab49e707705e5a'
-}
-default[:dcm4chee][:dcm4chee_web_weasis] = {
-  :source   => 'http://downloads.sourceforge.net/project/dcm4che/Weasis/dcm4chee-web3/3.0.3-r1/dcm4chee-web-weasis.jar',
-  :checksum => '05a89e7d0a90d2da81c27b6d945db7ded59636ea6d45043556628bde7462b5fe'
-}
 # NOTE: Dcm4chee always uses the default parameters, even if us overwrite these
 # attributes!
 default[:dcm4chee][:pacsdb] = {

@@ -139,29 +139,4 @@ describe 'dcm4chee::default' do
       expect(chef_run).to_not execute_command cmd
     end
   end
-
-  {
-    'weasis.war' => {
-      :source   => 'http://downloads.sourceforge.net/project/dcm4che/Weasis/1.2.5/weasis.war',
-      :checksum => '7947193bfee1fdf03050e3b0c62654e5867ae565fdb7730de67780ef2d25df84'
-    },
-    'weasis-i18n.war' => {
-      :source   => 'http://downloads.sourceforge.net/project/dcm4che/Weasis/1.2.5/weasis-i18n.war',
-      :checksum => '59a18c777208af1dc7012214f4d969f4d1d0279116f477b33923cdfebd32b41c'
-    },
-    'weasis-pacs-connector.war' => {
-      :source   => 'http://downloads.sourceforge.net/project/dcm4che/Weasis/dcm4chee-web3/3.0.3-r1/weasis-pacs-connector.war',
-      :checksum => '7fd28e78ddaf9e1cce91354848895839ce4de014890513262dab49e707705e5a'
-    },
-    'dcm4chee-web-weasis.jar' => {
-      :source   => 'http://downloads.sourceforge.net/project/dcm4che/Weasis/dcm4chee-web3/3.0.3-r1/dcm4chee-web-weasis.jar',
-      :checksum => '05a89e7d0a90d2da81c27b6d945db7ded59636ea6d45043556628bde7462b5fe'
-    }
-  }.each_pair do |file,attributes|
-    it "downloads #{file} to the deploy dir" do
-      dst = "#{dcm4chee_basedir}/server/default/deploy/#{file}"
-      converge!
-      expect(chef_run).to create_remote_file(dst).with(attributes)
-    end
-  end
 end
